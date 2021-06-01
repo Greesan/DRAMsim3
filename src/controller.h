@@ -34,6 +34,7 @@ class Controller {
     // Stats output
     void PrintEpochStats();
     void PrintFinalStats();
+    void PrintCmdType(const Command &cmd);
     void ResetStats() { simple_stats_.Reset(); }
     std::pair<uint64_t, int> ReturnDoneTrans(uint64_t clock);
 
@@ -79,6 +80,7 @@ class Controller {
     void ScheduleTransaction();
     void IssueCommand(const Command &tmp_cmd);
     Command TransToCommand(const Transaction &trans);
+    void PrintTransactionStats();
     void UpdateCommandStats(const Command &cmd);
 };
 }  // namespace dramsim3

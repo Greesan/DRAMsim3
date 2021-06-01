@@ -65,13 +65,13 @@ std::pair<uint64_t, int> Controller::ReturnDoneTrans(uint64_t clk) {
 void Controller::ClockTick() {
     // update refresh counter
     refresh_.ClockTick();
-
+    //std::cout << "clock tick";
     bool cmd_issued = false;
     Command cmd;
     if (channel_state_.IsRefreshWaiting()) {
         cmd = cmd_queue_.FinishRefresh();
     }
-
+    simple_stats_.PrintRLStats();
     // cannot find a refresh related command or there's no refresh
     if (!cmd.IsValid()) {
         cmd = cmd_queue_.GetCommandToIssue();
@@ -79,6 +79,8 @@ void Controller::ClockTick() {
 
     if (cmd.IsValid()) {
         IssueCommand(cmd);
+        PrintCmdType(cmd);
+        PrintTransactionStats();
         cmd_issued = true;
 
         if (config_.enable_hbm_dual_cmd) {
@@ -86,6 +88,8 @@ void Controller::ClockTick() {
             if (second_cmd.IsValid()) {
                 if (second_cmd.IsReadWrite() != cmd.IsReadWrite()) {
                     IssueCommand(second_cmd);
+                    PrintCmdType(second_cmd);
+                    PrintTransactionStats();
                     simple_stats_.Increment("hbm_dual_cmds");
                 }
             }
@@ -121,6 +125,8 @@ void Controller::ClockTick() {
                     cmd = channel_state_.GetReadyCommand(cmd, clk_);
                     if (cmd.IsValid()) {
                         IssueCommand(cmd);
+                        PrintCmdType(cmd);
+                        PrintTransactionStats();
                         break;
                     }
                 }
@@ -134,6 +140,8 @@ void Controller::ClockTick() {
                     cmd = channel_state_.GetReadyCommand(cmd, clk_);
                     if (cmd.IsValid()) {
                         IssueCommand(cmd);
+                        PrintCmdType(cmd);
+                        PrintTransactionStats();
                         break;
                     }
                 }
@@ -225,7 +233,67 @@ void Controller::ScheduleTransaction() {
         }
     }
 }
-
+void Controller::PrintTransactionStats()
+{
+    std::cout << "reads pending in queue:";
+    std::cout << pending_rd_q_.size() << std::endl;
+    std::cout << "writes pending in queue:";
+    std::cout << pending_wr_q_.size() << std::endl; 
+}
+void Controller::PrintCmdType(const Command &cmd){
+    string msg = "cmd:";
+    switch (cmd.cmd_type){
+    /*
+        'READ'
+    'READ_PRECHARGE'
+    'WRITE'
+    'WRITE_PRECHARGE'
+    'ACTIVATE'
+    'PRECHARGE'
+    'REFRESH_BANK'
+    'REFRESH'
+    'SREF_ENTER'
+    'SREF_EXIT'
+    'SIZE'
+        
+    */
+        case dramsim3::CommandType::READ:
+            msg+="READ";
+            break;
+        case dramsim3::CommandType::READ_PRECHARGE:
+            msg+="READ_PRECHARGE";
+            break;
+        case dramsim3::CommandType::WRITE:
+            msg+="WRITE";
+            break;
+        case dramsim3::CommandType::WRITE_PRECHARGE:
+            msg+="WRITE_PRECHARGE";
+            break;
+        case dramsim3::CommandType::ACTIVATE:
+            msg+="ACTIVATE";
+            break;
+        case dramsim3::CommandType::PRECHARGE:
+            msg+="PRECHARGE";
+            break;
+        case dramsim3::CommandType::REFRESH_BANK:
+            msg+="REFRESH_BANK";
+            break;
+        case dramsim3::CommandType::REFRESH:
+            msg+="REFRESH";
+            break;
+        case dramsim3::CommandType::SREF_ENTER:
+            msg+="SREF_ENTER";
+            break;
+        case dramsim3::CommandType::SREF_EXIT:
+            msg+="SREF_EXIT";
+            break;
+        case dramsim3::CommandType::SIZE:
+            msg+="SIZE";
+            break;
+    }
+    //msg+=cmd.cmd_type;
+    std::cout << msg << std::endl;
+}
 void Controller::IssueCommand(const Command &cmd) {
 #ifdef CMD_TRACE
     cmd_trace_ << std::left << std::setw(18) << clk_ << " " << cmd << std::endl;

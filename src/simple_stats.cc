@@ -476,4 +476,14 @@ void SimpleStats::UpdateFinalStats() {
     return;
 }
 
+void SimpleStats::PrintRLStats(){
+    std::cout << "num_reads_done:";
+    std::cout << counters_["num_reads_done"] << std::endl;
+    std::cout << "num_writes_done:";
+    std::cout << counters_["num_writes_done"] << std::endl;
+    std::cout << "num_write_cmds:";
+    std::cout << epoch_counters_["num_write_cmds"] << std::endl;
+
+}
+
 }  // namespace dramsim3

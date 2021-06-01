@@ -35,7 +35,7 @@ class SimpleStats {
 
     // Epoch update
     void PrintEpochStats();
-
+    void PrintRLStats();
     // Final statas output
     void PrintFinalStats();
 
